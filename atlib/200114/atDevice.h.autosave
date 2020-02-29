@@ -1,0 +1,208 @@
+/*
+by AT
+*/
+
+#ifndef atDeviceH
+#define atDeviceH
+
+
+#include <iostream>
+#include <vector>
+
+/*
+#include "PCCards.h"
+#include "Stoper.h"
+#include "Konfiguracja.h"
+
+#include "atTrace.h"
+#include "atError.h"
+
+#include "Raport.h"
+#include "at_minmax.h"
+*/
+using namespace std;
+
+class atDevice;
+typedef atDevice atDevice;
+
+//typedef void (__closure * EveFun) ();
+
+
+//------------------------------------------------------------
+// urządzenie składa sie z:
+// - wejść
+// - ze składowych (składowa to też urządzenie)
+// - oraz z wyjścia
+// wyjście urządzenia połączone jest z wyjsciem jednej ze składowych (pierwszej dodanej)
+// wyjścia składowych moga być podłączone do wejść składowych o wyższych numerach
+// wejścia urządzenia podłączone są do wejść składowych
+//
+//
+// przetwarzanie odbywa sie w kolejnosci od składowej o najwyzszym mumerzedo najnizszego numeru
+// zerowa (pierwsza dodana) jest najblizej wyjscia
+//
+// czyli:
+// wejście danej składowej może byc podłączone tylko jednego wyjscia skladowej blizszej wejścia (wyzszy numer)
+// wyjście danej składowej moze byc podłączone do kilku wejść składowych bliższych wyjscia
+class atDevice {
+private:
+protected:
+ void IniWe(int n){ nWe=n; aWe.resize(nWe,NULL); aConnDev.resize(nWe,-1); aConnWe.resize(nWe,-1);aIdWe.resize(nWe,"");  }
+ string sNazwa;           //nazwa urządzenia
+ string Id;
+ string sType;            //typ urządzenia
+
+ atDevice *ParentDev; //podzespół nadrzędny. Nasz Device należy do tego ParentDev i jest umieszczony w jego tablicy aParts
+ int ParentPartNo;     //numer w tablicy podzespołów do której przynależy nasz objekt
+
+ unsigned nWe;                 //ilosc wejść
+ vector <atDevice *> aParts;   //składowe
+ vector <atDevice *> aWe;      // .. wskaźnik tablicy wejść tego urządzenia
+ vector <int> aConnDev;        // .. wskaźnik tablicy połaczeń wejść tego urządzenia - urzadzenie (dlugość aWe)
+ vector <int> aConnWe;         // .. wskaźnik tablicy połaczeń wejść tego urządzenia - wejście (dlugość aWe)
+ vector <string> aIdWe;        // .. wskaźnik tablicy połaczeń wejść tego urządzenia - wejście (dlugość aWe)
+ void SetWeId(int i, string s){aIdWe.at(i)=s;}
+
+ double Wy;                    //wyjście
+ bool enabled;
+
+ bool VirtualWeChecked;               //=true jeśli już wykonano spardzenie funkcją findVirtualWe
+ vector <atDevice *> aVirtualWe;      // .. wskaźnik tablicy wejść wirtualnych
+ void findVirtualWe(atDevice *d);     //wirtualne wejścia są na potrzeby TDevicePanel
+
+
+ Raport Rap;                 //raport
+ */6hgttg5           //wskaźnik błędu
+ void SetError(int e, string op, int ech, int buf, string he);
+ void SetError(int e, int ech, string he)    { SetError(e,"",ech,NULL,he); };
+ void SetError(int e,string he)              { SetError(e,"",NULL,NULL,he); };
+ void SetError(atError *e)  {
+	if(e!=NULL){
+	  SetError(e->GetCode(),
+	  e->GetOpis(),
+	  e->GetChn(),e->GetBuf(),e->GetHdwOpis());
+	}
+
+ }; //moze konstruktor z parametrem atError?
+
+ void SetParams(int n);
+
+ //events
+ bool EveStatus;    //wzkaźnik blokujący wielokrotne uruchomienie Eve
+ bool EveOnUp_One;  //true oznacza wyczyszczenie Eve po jego wykonaniu
+ bool EveOnDn_One;  //jw
+ EveFun EveOnUp;    //przejście wyjścia(!) przez 0 w górę
+ EveFun EveOnDn;    // w dół
+ void GoEve();      //uruchamiacz zdarzeń
+
+
+public:
+
+ atDevice(int n)                      {SetParams(n);};
+ atDevice()                           {SetParams(0);}; //część tych konstrukotorów jest do wywalenia, min ten, ale trzeba poprawić konstruktory klas podrzędnych wcześniej
+ atDevice(string s)                   {SetParams(0);SetNazwa(s);};
+ atDevice( int n,string s)            {SetParams(n);SetNazwa(s);};
+ atDevice(string s,string id)         {SetParams(0);SetNazwa(s,id);};
+ atDevice( int n,string s, string id) {SetParams(n);SetNazwa(s,id);};
+ ~atDevice( ) {if(Error!=NULL) delete Error;};
+
+
+ void SetRaport(AnsiString f, AnsiString p){Rap.Ini(f,p,"","");};
+ void WriteRaport(AnsiString s){Rap.Write(s);};
+
+ void SetType(string t){sType=t;}; //
+ void SetId(string id){Id=id;}; //
+ void SetNazwa(string s){sNazwa=s;}; //
+ void SetNazwa(string s,string id){sNazwa=s;Id=id;}; //
+ string GetNazwa(){ return sNazwa;}; //
+ string GetId() {return Id;}; //zwraca id
+ string GetType() {return sType;}; 
+
+ unsigned SizeParts() {return aParts.size();};
+ unsigned lastPartNo() {return aParts.size()-1;};
+ int PartNo(string id);
+ atDevice *Part(int i) {return aParts.at(i);};
+ atDevice *Part(string id);
+ atDevice *lastPart() {if(aParts.size()==0)return NULL; else return aParts.at(aParts.size()-1);};
+
+ unsigned SizeWe() {return nWe;};
+ int WeNo(string id);
+ int WeNo(atDevice *d);
+ bool WeEmpty(string id); //sprawdza czy istnieje wejście i czy jest wolne
+ atDevice *We(int i) {return aWe.at(i);};
+ atDevice *We(string id);
+ bool IsConnected(atDevice *d); //sprawdza czy d jest podłączone do nas (uwzględnia rekurencyjnie jego Partsy)
+ bool IsStrictConnected(atDevice *d); //sprawdza czy d jest podłączony do nas (tylko bezpośrednie łącze)
+ bool IsItOrPart(atDevice *d); //czy d to my, czy może nasz rodzic albo dziadek?
+
+ void findVirtualWe();
+ unsigned SizeVirtualWe(){if(!VirtualWeChecked)findVirtualWe(); return aVirtualWe.size();}; //musi być wykonane find zanim zwrócimy size
+ atDevice* VirtualWe(unsigned i){if(!VirtualWeChecked)findVirtualWe(); return aVirtualWe.at(i);};//jw
+
+ double GetWy() {  return Wy; }; //zwraca wyjscie
+ double GetWy(int i){  atDevice *p=Part(i);  return p->GetWy();};
+ double GetWy(string id){  atDevice *p=Part(id);  return p->GetWy();};
+ atError *GetError() {return Error;};
+
+ bool connect(atDevice *d, unsigned i);   //podłącza do wejścia "i" urządzenie "d"
+ bool connect(atDevice *d, string id);    //podłącza do wejścia "id" urządzenie "d"
+ bool connect(atDevice *d, string idP,string idW);    //podłącza do wejścia "idW" składową idP urządzenia "d"
+ bool connect(atDevice *d, string idP,unsigned nW);   // jw
+ bool connect(atDevice *d, unsigned nP,unsigned nW);  // jw
+ void disconnect(unsigned i){ if(i<nWe) aWe.at(i)=NULL; };
+
+ bool addPart( atDevice *d);
+ bool addPart(atDevice *d, unsigned nDev, unsigned nWe);
+ bool addPart(atDevice *d, string idDev, string idWe);
+ bool addPart(atDevice *d, string idDev, unsigned nWe);
+ bool addWe( unsigned n, unsigned nD, unsigned nW);
+ bool addWe( unsigned n, string idD, string idW);
+ bool addWe( unsigned n, string idD, unsigned nW);
+ bool addConnection( unsigned nD0, unsigned nD1, unsigned nW); //wewnętrzne połączenie urzadzenia  nD0 wejścia nW urządzenia nD1
+ bool addConnection( string idD0, string idD1, string idW); //wewnętrzne połączenie urzadzenia  nD0 wejścia nW urządzenia nD1
+ bool addConnection( string idD0, string idD1, unsigned nW); //wewnętrzne połączenie urzadzenia  nD0 wejścia nW urządzenia nD1
+ bool addConnection( unsigned nD0, unsigned nP,  unsigned nD1, unsigned nW);
+ bool addConnection( string idD0, string idP,  string idD1, string idW);
+ bool addConnection( string idD0, string idP,  string idD1, unsigned nW);
+
+ void GoParts(); //oblicza składowe
+ void ExtFunParts(int i);
+
+
+ double Go(){ Wy=GoFun(); GoEve(); return Wy;  };    //oblicza wyjscie i wstawia na zmiennną Wy
+ void SetWy(double w){ Wy=w; EveStatus=(Wy>0);};
+ bool Enabled(){return enabled;};
+ void SetEnabled(bool e){enabled=e;};
+
+ void SetEveOnUp(EveFun f)    {EveOnUp=f; EveOnUp_One=false;};
+ void SetEveOnDn(EveFun f)    {EveOnDn=f; EveOnDn_One=false;};
+ void SetEveOnUp_One(EveFun f){EveOnUp=f; EveOnUp_One=true;};
+ void SetEveOnDn_One(EveFun f){EveOnDn=f; EveOnDn_One=true;};
+
+ //parametry ustawiane na poziomie i na potrzeby DevicePanel
+ bool Part_Visible; //czy widoczne jako Part w Panelu nadrzeędnym
+ bool ButtSS_Visible; //czy widoczny klwaisz SS
+ int EditWidth;     //szerokość pola Wy
+ int EditWy_prec;   //il. c. dzies. pola Wy
+ int EditWy_digits; //ilość cyfr pola Wy
+ int EditWeWidth;   //szerokość pola We
+
+ //-------------------------------------------
+ // virtual
+ //-------------------------------------------
+ virtual double GoFun();     //oblicza wyjscie
+							 //funkcja działa gdy urządzenie nie ma składowych!
+							 //jesli urządzenie ma składowe to na wyjście wstawiana jest wartość wyjścia pierwszej składowej
+							 // ?? czy to powyzej to jest oby dobre założenie ??
+ virtual void ExtFun(int i); //zewnetrzna zmiana parametrów
+ virtual string GetOpis() {return "";};   //dodatkowy opis zaleźny od klasy
+ virtual void SetFun(int j){ };     //funkcje ustawień
+ virtual void SetDouble(double j){ };
+ virtual TColor GetColor(){return NULL;};
+
+
+};
+
+
+
+#endif

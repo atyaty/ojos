@@ -1,0 +1,48 @@
+
+<cam0> 
+    //---------------------------------parametry kamery
+    <deviceID> 0        <deviceID>     //
+    <Xtg>      0.9259   </Xtg>         //tangens kąta widzenia
+    <Ztg>      0.9259   </Ztg>         //..
+    <X>        512      </X>           //rozdzielczość
+    <Z>        384      </Z>           //..
+    //------------------------------parametry procedury GaussianBlur (do detekcji kółek)
+    <BlurXs>        9   </BlurXs>
+    <BlurZs>        9   </BlurZs>
+    <BlurXdev>      2   </BlurXdev>
+    <BlurZdev>      2   </BlurZdev>
+    //--------------------------------parametry procedury HoughCircle
+    <CircleInversRat>1  </CircleInversRat>
+    <CircleminDist>  8  </CircleminDist>  
+    <CircleParam1>   60 </CircleParam1>   
+    <CircleParam2>   40 </CircleParam2>   
+    <CircleminR>     0  </CircleminR>     
+    <CirclemaxR>     0  </CirclemaxR>     
+    //--------------------------------parametry procedury Canny
+    <Cannythres1>   50  </Cannythres1>
+    <Cannythres2>   200 </Cannythres2>
+    <Cannyaperture> 3   </Cannyaperture>
+    //-----------------------------parametry do procedury HoughLineP
+    <Linerho>     1     </Linerho> 
+    <Linetheta>   180   </Linetheta>  
+    <Linethres3>  80    </Linethres3> 
+    <LineminLen>  30    </LineminLen> 
+    <LineminGap>  10    </LineminGap> 
+</cam0>
+
+<rowPoziom> 0,1</rowPoziom>
+<colPoziom> 0,1</colPoziom>
+<rowSzerokosc> 10 </rowSzerokosc>
+<colSzerokosc> 10 </colSzerokosc>
+<rowPadding> 5 </rowPadding>
+<colPadding> 5 </colPadding>
+<podzialVertykalny> 10 </podzialVertykalny>
+
+<d_Pozycja> 10 </d_Pozycja>
+<d_Szerokosc> 10 </d_Szerokosc>
+<d_Wysokosc> 10 </d_Wysokosc>
+<d_Nachylenie> 10 </d_Nachylenie>
+
+
+
+
